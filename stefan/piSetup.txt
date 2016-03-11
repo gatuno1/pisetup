@@ -1,0 +1,70 @@
+## update and upgrade
+apt-get -y update
+apt-get -y upgrade
+apt-get -y  dist-upgrade
+
+### RPI config shell
+raspi-config
+
+services :
+/etc/init.d/dnsmasq restart
+
+useradd -b /home -c video -g users -m -p password -s /bin/bash  video
+useradd -b /home -c shaertle -g users -m -p password -s /bin/bash  shaertle
+useradd -b /home -c solar -g users -m -p password -s /bin/bash  solar
+
+# DNS & DHCP
+apt-get -y install dnsmasq
+# Sendmail
+apt-get -y install sendemail libio-socket-ssl-perl libnet-ssleay-perl
+mail mbox mailutils
+# nmap network discovery
+apt-get -y  nmap aptitude
+# xrdp
+apt-get -y install xrdp
+# perl libs
+apt-get -y install  libxml-simple-perl libwww-mechanize-shell-perl
+libdatetime-event-ical-perl
+# shell in a box /Webgui
+apt-get -y install shellinabox
+
+
+/etc/fstab
+10.10.20.20:Multimedia  /Media  nfs     nolock  0       2
+
+vi /etc/crontab
+*/5 *   * * *   solar   /home/solar/mibi/mibi_struct2.pl >>
+/var/log/mibi.log
+*/5 *   * * *   solar   /home/solar/mibi/mon_mibi.pl >
+/etc/rpimonitor/template/mibi_temp
+55 23     * * *   video   /home/video/script/consolidate.sh  >>
+/var/log/consolidate.log
+* 12    * * *   video   /home/video/script/consolidate.sh  >>
+/var/log/consolidate.log
+*/5 *   * * *   root    /root/wakeup/wakeup_shutdown.sh >>
+/var/log/wakeup_shutdown.log
+
+service cron restart
+
+RPi-Monitor Installation
+###  important is the ntpd time sync !!!!
+
+sudo apt-get install apt-transport-https ca-certificates
+apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 2C0D3C0F
+
+sudo apt-get install rpimonitor
+
+apt-get -y install  aptitude
+
+aptitude  search lib | grep xxxx
+#temp perl scripts
+/home/solar/mibi/mon_mibi.pl > /etc/rpimonitor/template/mibi_temp
+
+for i in $(ls -d */); do echo ${i%%/}; done
+
+find . -iname '*.jpg' -exec  mv -t ./result/ {} \+
+
+Check HD power stats
+hdparm -C /dev/sdxxx
+HD standby after 300 sec
+hdparm -S 60 /dev/sdc

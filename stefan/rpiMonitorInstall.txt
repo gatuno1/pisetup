@@ -1,0 +1,9 @@
+sudo apt-get install dpkg-dev librrds-perl libhttp-daemon-perl libjson-perl libipc-sharelite-perl libfile-which-perl
+
+Check on the Web
+https://github.com/XavierBerger/RPi-Monitor-deb/raw/master/packages/ for the latest version ...
+
+
+wget https://github.com/XavierBerger/RPi-Monitor-deb/raw/master/packages/rpimonitor_2.9.1-1_all.deb
+sudo dpkg -i rpimonitor_2.9.1-1_all.deb
+rm rpimonitor_2.9.1-1_all.deb
