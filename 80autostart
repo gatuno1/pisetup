@@ -1,0 +1,22 @@
+# /etc/X11/Xsession.d/90unclutter
+# This file is sourced by Xsession(5), not executed.
+
+echo "@lxpanel --profile LXDE-pi" > /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@pcmanfm --desktop --profile LXDE-pi" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@xscreensaver -no-splash" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@sh ${HOME}/.config/lxsession/LXDE-pi/autokey.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@xset s off" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@xset -dpms" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@xset s noblank" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+echo "@conky -c /home/pi/.conkyrc" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+
+CPU=`cat /proc/cpuinfo | grep Serial | cut -d ':' -f 2 | sed -e "s/ //g"`
+HW=`cat /proc/cpuinfo | grep Hardware | cut -d ':' -f 2 | sed -e "s/ //g"`
+REV=`cat /proc/cpuinfo | grep Revision | cut -d ':' -f 2 | sed -e "s/ //g"`
+URL=http://display.news/kiosk/#/${CPU}/${HW}/${REV}
+
+#echo "@chromium-browser --noerrdialogs --kiosk --incognito --disable-restore-session-state http://bgcmen.com/teesheet/#/bracket/view/1" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+#echo "@chromium-browser --noerrdialogs --kiosk --incognito --disable-restore-session-state http://display.news/kiosk/#/$CPU/$HW/$REV" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+#echo "@chromium-browser --noerrdialogs --incognito --disable-restore-session-state http://display.news/kiosk/#/${CPU}/$HW/${REV}" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+#echo "@chromium-browser --noerrdialogs --incognito --disable-restore-session-state ${URL}" >> /home/pi/.config/lxsession/LXDE-pi/autostart
+#echo "@chromium-browser --noerrdialogs --kiosk --incognito --disable-restore-session-state ${URL}" >> /home/pi/.config/lxsession/LXDE-pi/autostart

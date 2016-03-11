@@ -1,0 +1,154 @@
+# Conky configuration
+ 
+# Set to yes if you want Conky to be forked in the background
+background no
+ 
+# Font size?
+font Sans:size=8
+ 
+# Use Xft?
+use_xft yes
+ 
+# Text alpha when using Xft
+xftalpha 0.9
+ 
+# Update interval in seconds
+update_interval 60.0
+ 
+# This is the number of times Conky will update before quitting.
+# Set to zero to run forever.
+total_run_times 0
+ 
+# Text alignment, other possible values are commented
+#alignment top_left
+#alignment top_right
+#alignment bottom_left
+alignment bottom_right
+#alignment none
+ 
+# Create own window instead of using desktop (required in nautilus)
+own_window yes
+ 
+# If own_window is yes, you may use type normal, desktop or override
+own_window_type normal
+ 
+# Use pseudo transparency with own_window?
+own_window_transparent yes
+ 
+# If own_window_transparent is set to no, you can set the background colour here
+own_window_colour black
+ 
+# If own_window is yes, these w# Text alignment, other possible values are commented
+#alignment top_left
+#alignment top_right
+#alignment bottom_left
+alignment bottom_right
+#alignment none
+ 
+# If own_window is yes, these window manager hints may be used
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+ 
+# Use double buffering (reduces flicker, may not work for everyone)
+double_buffer yes
+ 
+# Minimum size of text area
+minimum_size 200 5
+ 
+# Draw shades?
+draw_shades yes
+ 
+# Draw outlines?
+draw_outline no
+ 
+# Draw borders around text
+draw_borders no
+ 
+# Draw borders around graphs
+draw_graph_borders yes
+ 
+# Default colors and also border colors
+default_color black
+default_shade_color white
+default_outline_color white
+ 
+# Text alignment, other possible values are commented
+#alignment top_left
+alignment top_right
+#alignment bottom_left
+#alignment bottom_right
+#alignment none
+ 
+# Gap between borders of screen and text
+# same thing as passing -x at command line
+gap_x 12
+gap_y 35
+ 
+# Subtract file system buffers from used memory?
+no_buffers no
+ 
+# set to yes if you want all text to be in uppercase
+uppercase no
+ 
+# number of cpu samples to average
+# set to 1 to disable averaging
+cpu_avg_samples 1
+ 
+# number of net samples to average
+# set to 1 to disable averaging
+net_avg_samples 1
+ 
+# Force UTF8? note that UTF8 support required XFT
+override_utf8_locale no
+ 
+TEXT
+${color blue}${font Ubuntu:bold:size=14}$nodename ${font Sans:size=8}$machine${hr 1}${color}
+Uptime: $alignr$uptime
+CPU: ${alignr}${freq} MHz
+Processes: ${alignr}$processes ($running_processes running)
+# Load: ${alignr}$loadavg
+ 
+${if_existing /sys/devices/system/cpu/cpu0}CPU1 ${alignr}${cpu cpu1}%
+${cpubar cpu1 4}${endif}${if_existing /sys/devices/system/cpu/cpu1}
+CPU2 ${alignr}${cpu cpu2}%
+${cpubar cpu2 4}${endif}${if_existing /sys/devices/system/cpu/cpu2}
+CPU3 ${alignr}${cpu cpu3}%
+${cpubar cpu3 4}${endif}${if_existing /sys/devices/system/cpu/cpu3}
+CPU4 ${alignr}${cpu cpu4}%
+${cpubar cpu4 4}${endif}
+${cpugraph 20}
+ 
+Ram ${alignr}$mem / $memmax ($memperc%)
+${membar 4}
+Swap ${alignr}$swap / $swapmax ($swapperc%)
+${swapbar 4}
+ 
+${color white}FILESYSTEMS ${hr 1}${color}
+Root ${alignr}${fs_free /} / ${fs_size /}
+${fs_bar 4 /}${if_mounted /media/disk}
+Disk1 ${alignr}${fs_free /media/disk} / ${fs_size /media/disk}
+${fs_bar 4 /media/disk}${endif}${if_mounted /media/disk-1}
+Disk2 ${alignr}${fs_free /media/disk-1} / ${fs_size /media/disk-1}
+${fs_bar 4 /media/disk-1}${endif}${if_mounted /media/disk-2}
+Disk3 ${alignr}${fs_free /media/disk-2} / ${fs_size /media/disk-2}
+${fs_bar 4 /media/disk-2}${endif}${if_mounted /media/disk-3}
+Disk4 ${alignr}${fs_free /media/disk-3} / ${fs_size /media/disk-3}
+${fs_bar 4 /media/disk-3}${endif}${if_mounted /media/disk-4}
+Disk5 ${alignr}${fs_free /media/disk-4} / ${fs_size /media/disk-4}
+${fs_bar 4 /media/disk-4}${endif}
+ 
+${color white}NETWORK ${hr 1}${color}
+${if_existing /sys/class/net/eth0/operstate up}IP (eth0):$alignr${addr eth0}
+Down: ${downspeed eth0} k/s ${alignr}Up: ${upspeed eth0} k/s
+${downspeedgraph eth0 20,90} ${alignr}${upspeedgraph eth0 20,90}
+Total: ${totaldown eth0} ${alignr}Total: ${totalup eth0}
+ 
+${endif}${if_existing /sys/class/net/wlan0/operstate up}IP (wlan0):$alignr${addr wlan0}
+AP: ${wireless_essid wlan0} ${alignr}Bitrate: ${wireless_bitrate wlan0}
+Down: ${downspeed wlan0} k/s ${alignr}Up: ${upspeed wlan0} k/s
+${downspeedgraph wlan0 20,90} ${alignr}${upspeedgraph wlan0 20,90}
+Total: ${totaldown wlan0} ${alignr}Tota: ${totalup wlan0}
+ 
+${endif}${if_existing /sys/class/net/ppp0/operstate}IP (ppp0):$alignr${addr ppp0}
+Down: ${downspeed ppp0} k/s ${alignr}Up: ${upspeed ppp0} k/s
+${downspeedgraph ppp0 20,90} ${alignr}${upspeedgraph ppp0 20,90}
+Total: ${totaldown ppp0} ${alignr}Total: ${totalup ppp0}${endif}
