@@ -7,3 +7,5 @@ https://github.com/XavierBerger/RPi-Monitor-deb/raw/master/packages/ for the lat
 wget https://github.com/XavierBerger/RPi-Monitor-deb/raw/master/packages/rpimonitor_2.9.1-1_all.deb
 sudo dpkg -i rpimonitor_2.9.1-1_all.deb
 rm rpimonitor_2.9.1-1_all.deb
+
+goto http://<localhost>:8888
