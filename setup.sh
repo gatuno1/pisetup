@@ -15,6 +15,7 @@ then
    newuserpasscrypt=$(openssl passwd -crypt ${newuserpass})
    sudo useradd -b /home -c ${newuser} -g users -m -p ${newuserpasscrypt} -s /bin/bash ${newuser}
 fi
+# Optional packages to install
 pkglist=$(whiptail --title "Install Checklist" --checklist \
 "Choose packages to install" 15 60 8 \
 "xrdp" "XRDP & Conky" ON \
@@ -26,11 +27,17 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
 3>&1 1>&2 2>&3)
+# Configuration options
+configopts=$(whiptail --title "Configure Options" --checklist \
+"Do you want these configured" 15 60 8 \
+"nodered" "Node Red nodes" ON \
+"wpa" "WiFi credentials file" ON \
+"autostart" "X11 autostart file" ON \
+"rpi" "RPi Monitor" ON \
+3>&1 1>&2 2>&3)
 #### start the setup process ####
 STARTTIME=$(date +%s)
-echo "-- alias ll='ls -l'" >> ~/.bashrc
-sudo cp wpa_supplicant.conf /etc/wpa_supplicant
-sudo cp 80autostart /etc/X11/Xsession.d
+echo "alias ll='ls -l'" >> ~/.bashrc
 # Update timezone
 sudo rm /etc/localtime
 #sudo ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime
@@ -111,6 +118,42 @@ do
     \"mongodb\")
       echo "-- Installing MongoDB"
       sudo apt-get -y install mongodb
+    ;;
+    \"zwave\")
+      echo "-- Installing ZWave"
+      sudo apt-get -y install libudev-dev
+      wget http://old.openzwave.com/downloads/openzwave-1.4.1.tar.gz
+      tar zxvf openzwave-*.gz
+      cd openzwave-*
+      make && sudo make install
+      export LD_LIBRARY_PATH=/usr/local/lib
+      //sudo sed -i '$a LD_LIBRARY_PATH=/usr/local/lib' /etc/environment
+      sudo echo 'LD_LIBRARY_PATH=/usr/local/lib' >> /etc/environment
+      npm install node-gyp
+      npm install openzwave-shared
+      wget https://raw.githubusercontent.com/OpenZWave/node-openzwave-shared/master/test2.js
+    ;;
+    *)
+    ;;
+  esac
+done
+## config options
+echo "-- Configuration options"
+for pkg in $configopts
+do
+  case $pkg in
+    \"nodered\")
+    mkdir .node-red
+    cd node-red
+    npm install node-gyp node-red-node-mongodb request thethingbox-node-timestamp
+    ;;
+    \"wpa\")
+      sudo cp wpa_supplicant.conf /etc/wpa_supplicant
+    ;;
+    \"autostart\")
+      sudo cp 80autostart /etc/X11/Xsession.d
+    ;;
+    \"rpi\")
     ;;
     *)
     ;;

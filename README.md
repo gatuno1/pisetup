@@ -16,20 +16,21 @@ Here's what the main setup.sh script installs
 * npm to support NodeRed
 * mongodb to support NodeRed
 * Calculate install time and include with text message
+* Add prompts to select install of dependent files
+* Install Node Red nodes
 
 ##### ToDo
 
-* Elapsed time calculation not working
-* Useradd failing
+* RPi Monitor config (top3, shellinabox)
+    cron.d, data.conf
+* ZWave install - USB Stick, nodered
 * Option to install Touch screen
    https://www.element14.com/community/docs/DOC-77915/l/i-can-see-clearly-now-with-the-4d-systems-24-touch-screen-for-the-raspberry-pi
 * Run RPi update process
    sudo apt-get update && sudo /usr/share/rpimonitor/scripts/updatePackagesStatus.pl
 * Pi password not set
 * Calculate disk space used
-* Install Node Red nodes
 * If user chooses Cancel on any prompt, abort setup script
-* Add prompts to select install of dependent files
 
 ##### Fixed bugs
 
