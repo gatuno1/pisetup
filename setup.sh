@@ -26,6 +26,7 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "rpi" "RPi Monitor" ON \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
+"zwave" "ZWave" ON \
 3>&1 1>&2 2>&3)
 # Configuration options
 configopts=$(whiptail --title "Configure Options" --checklist \
@@ -143,9 +144,11 @@ for pkg in $configopts
 do
   case $pkg in
     \"nodered\")
-    mkdir .node-red
-    cd node-red
-    npm install node-gyp node-red-node-mongodb request thethingbox-node-timestamp
+      mkdir .node-red
+      cd .node-red
+      npm install node-gyp node-red-node-mongodb request thethingbox-node-timestamp
+      # Startup services
+      sudo systemctl enable nodered.service
     ;;
     \"wpa\")
       sudo cp wpa_supplicant.conf /etc/wpa_supplicant
@@ -159,8 +162,6 @@ do
     ;;
   esac
 done
-# Startup services
-sudo systemctl enable nodered.service
 # change hostname
 echo "-- Setting hostname"
 if [ "$oldhostname" != "$newhostname" ]
