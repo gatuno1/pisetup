@@ -1,6 +1,6 @@
 # Raspberry Pi Setup Files
 
-These are some setup files for a new Raspberry Pi.
+These are some setup files for a new Raspberry Pi. There's a 1 minute demo of the script [here](http://kenrogers.co/meteor-react).
 
 ### setup.sh
 
