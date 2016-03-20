@@ -26,7 +26,8 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "rpi" "RPi Monitor" ON \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
-"zwave" "ZWave" ON \
+"openhab" "OpenHAB" OFF \
+"zwave" "ZWave" OFF \
 3>&1 1>&2 2>&3)
 # Configuration options
 configopts=$(whiptail --title "Configure Options" --checklist \
@@ -35,6 +36,7 @@ configopts=$(whiptail --title "Configure Options" --checklist \
 "wpa" "WiFi credentials file" ON \
 "autostart" "X11 autostart file" ON \
 "rpi" "RPi Monitor" ON \
+"openhab" "OpenHAB" OFF \
 3>&1 1>&2 2>&3)
 #### start the setup process ####
 STARTTIME=$(date +%s)
@@ -120,6 +122,16 @@ do
       echo "-- Installing MongoDB"
       sudo apt-get -y install mongodb
     ;;
+    \"openhab\")  # https://github.com/openhab/openhab/wiki/Linux---OS-X
+      echo "-- Installing OpenHAB"
+      wget -qO - 'https://bintray.com/user/downloadSubjectPublicKey?username=openhab' |sudo apt-key add -
+      echo "deb http://dl.bintray.com/openhab/apt-repo stable main" | sudo tee /etc/apt/sources.list.d/openhab.list
+      sudo apt-get update
+      sudo apt-get install openhab-runtime
+      # sudo update-rc.d openhab defaults
+      # sudo chown -hR openhab:openhab /etc/openhab
+      # sudo chown -hR openhab:openhab /usr/share/openhab
+    ;;
     \"zwave\")
       echo "-- Installing ZWave"
       sudo apt-get -y install libudev-dev
@@ -157,6 +169,18 @@ do
       sudo cp 80autostart /etc/X11/Xsession.d
     ;;
     \"rpi\")
+      sudo cp /usr/share/rpimonitor/web/addons/top3/top3.cron /etc/cron.d/top3
+      sudo echo "web.addons.1.name=Shellinabox" >>/etc/rpimonitor/data.conf
+      sudo echo "web.addons.1.addons=shellinabox" >>/etc/rpimonitor/data.conf
+      sudo echo "web.addons.2.name=Top3" >>/etc/rpimonitor/data.conf
+      sudo echo "web.addons.2.addons=top3" >> /etc/rpimonitor/data.conf
+      sudo service rpimonitor restart
+    ;;
+    \"openhab\")
+      sudo systemctl daemon-reload
+      sudo systemctl enable openhab
+      sudo systemctl start openhab
+      sudo usermod -a -G dialout openhab
     ;;
     *)
     ;;

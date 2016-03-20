@@ -19,6 +19,13 @@ Here's what the main setup.sh script installs
 * Add prompts to select install of dependent files
 * Install Node Red nodes
 
+### url's
+
+* RPi Monitor - http://<hostname>:8888
+* Node Red - http://<hostname>:1880
+* ShellInABox - http://<hostname>:4200
+* OpenHAB - http://<localhost>:8080/openhab.app?sitemap=yourname (not yet working)
+
 ##### ToDo
 
 * RPi Monitor config (top3, shellinabox)
