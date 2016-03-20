@@ -21,20 +21,17 @@ Here's what the main setup.sh script installs
 
 ### url's
 
-* RPi Monitor - http://<hostname>:8888
-* Node Red - http://<hostname>:1880
-* ShellInABox - http://<hostname>:4200
-* OpenHAB - http://<localhost>:8080/openhab.app?sitemap=yourname (not yet working)
+* RPi Monitor - http://localhost:8888
+* Node Red - http://localhost:1880
+* ShellInABox - http://localhost:4200
+* OpenHAB - http://localhost:8080/openhab.app?sitemap=yourname (not yet working)
 
 ##### ToDo
 
-* RPi Monitor config (top3, shellinabox)
-    cron.d, data.conf
+* OpenHAB setup incomplete
 * ZWave install - USB Stick, nodered
 * Option to install Touch screen
    https://www.element14.com/community/docs/DOC-77915/l/i-can-see-clearly-now-with-the-4d-systems-24-touch-screen-for-the-raspberry-pi
-* Run RPi update process
-   sudo apt-get update && sudo /usr/share/rpimonitor/scripts/updatePackagesStatus.pl
 * Pi password not set
 * Calculate disk space used
 * If user chooses Cancel on any prompt, abort setup script
