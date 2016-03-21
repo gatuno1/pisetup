@@ -26,8 +26,9 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "rpi" "RPi Monitor" ON \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
-"openhab" "OpenHAB" OFF \
 "zwave" "ZWave" OFF \
+"openhab" "OpenHAB" OFF \
+"touchscreen" "Touch Screen" OFF \
 3>&1 1>&2 2>&3)
 # Configuration options
 configopts=$(whiptail --title "Configure Options" --checklist \
@@ -37,6 +38,7 @@ configopts=$(whiptail --title "Configure Options" --checklist \
 "autostart" "X11 autostart file" ON \
 "rpi" "RPi Monitor" ON \
 "openhab" "OpenHAB" OFF \
+"touchscreen" "Enable Touch Screen" OFF \
 3>&1 1>&2 2>&3)
 #### start the setup process ####
 STARTTIME=$(date +%s)
@@ -117,10 +119,24 @@ do
       wget https://dl.dropboxusercontent.com/u/87113035/chromium-codecs-ffmpeg-extra_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
       sudo dpkg -i chromium-codecs-ffmpeg-extra_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
       sudo dpkg -i chromium-browser-l10n_45.0.2454.85-0ubuntu0.15.04.1.1181_all.deb chromium-browser_45.0.2454.85-0ubuntu0.15.04.1.1181_armhf.deb
+      rm chromium*
     ;;
     \"mongodb\")
       echo "-- Installing MongoDB"
       sudo apt-get -y install mongodb
+    ;;
+    \"zwave\")
+      echo "-- Installing ZWave"
+      sudo apt-get -y install libudev-dev
+      wget http://old.openzwave.com/downloads/openzwave-1.4.1.tar.gz
+      tar zxvf openzwave-*.gz
+      cd openzwave-*
+      make && sudo make install
+      export LD_LIBRARY_PATH=/usr/local/lib
+      echo 'LD_LIBRARY_PATH=/usr/local/lib' | sudo tee --append /etc/environment
+      npm install node-gyp
+      npm install openzwave-shared
+      wget https://raw.githubusercontent.com/OpenZWave/node-openzwave-shared/master/test2.js
     ;;
     \"openhab\")  # https://github.com/openhab/openhab/wiki/Linux---OS-X
       echo "-- Installing OpenHAB"
@@ -132,19 +148,11 @@ do
       # sudo chown -hR openhab:openhab /etc/openhab
       # sudo chown -hR openhab:openhab /usr/share/openhab
     ;;
-    \"zwave\")
-      echo "-- Installing ZWave"
-      sudo apt-get -y install libudev-dev
-      wget http://old.openzwave.com/downloads/openzwave-1.4.1.tar.gz
-      tar zxvf openzwave-*.gz
-      cd openzwave-*
-      make && sudo make install
-      export LD_LIBRARY_PATH=/usr/local/lib
-      //sudo sed -i '$a LD_LIBRARY_PATH=/usr/local/lib' /etc/environment
-      sudo echo 'LD_LIBRARY_PATH=/usr/local/lib' >> /etc/environment
-      npm install node-gyp
-      npm install openzwave-shared
-      wget https://raw.githubusercontent.com/OpenZWave/node-openzwave-shared/master/test2.js
+    \"touchscreen\")
+      echo "-- Installing Touch Screen"
+      wget http://www.4dsystems.com.au/downloads/4DPi/4DPi-24-HAT/4DPi-24-HAT_kernel_R_1_0.tar.gz
+      sudo tar -xzvf 4DPi-24-HAT_kernel_R_1_0.tar.gz -C /
+      rm 4DPi-24-HAT_kernel_R_1_0.tar.gz
     ;;
     *)
     ;;
@@ -174,13 +182,43 @@ do
       sudo echo "web.addons.1.addons=shellinabox" >>/etc/rpimonitor/data.conf
       sudo echo "web.addons.2.name=Top3" >>/etc/rpimonitor/data.conf
       sudo echo "web.addons.2.addons=top3" >> /etc/rpimonitor/data.conf
+      sudo sed -i "s/$nbtop=3/$nbtop=10/" /usr/share/rpimonitor/web/addons/top3/top3
       sudo service rpimonitor restart
     ;;
     \"openhab\")
       sudo systemctl daemon-reload
       sudo systemctl enable openhab
-      sudo systemctl start openhab
+      # following needed for ZWave stick
       sudo usermod -a -G dialout openhab
+      sudo apt-get install openhab-addon-persistence-rrd4j
+      sudo apt-get install openhab-addon-binding-zwave
+      sudo apt-get install openhab-addon-io-myopenhab
+      sudo apt-get install openhab-addon-persistence-logging
+      sudo apt-get install openhab-addon-persistence-mongodb
+      sudo apt-get install openhab-addon-action-mail
+      sudo apt-get install openhab-addon-action-nma
+      sudo apt-get install openhab-addon-action-prowl
+      sudo apt-get install openhab-addon-action-pushover
+      sudo apt-get install openhab-addon-binding-plex
+      # /etc/default/openhab  &  /etc/openhab/configurations/openhab_default.cfg
+      sudo -u openhab cp /etc/openhab/configurations/openhab_default.cfg /etc/openhab/configurations/openhab.cfg
+      # edit the openhab.cfg file
+      # zwave:port, mongodb parms
+
+      # sitemaps - https://github.com/openhab/openhab/wiki/Explanation-of-Sitemaps
+      sudo -u openhab touch /etc/openhab/configurations/sitemaps/default.sitemap
+      wget https://raw.githubusercontent.com/openhab/openhab-distro/master/features/openhab-demo-resources/src/main/resources/sitemaps/demo.sitemap
+      sudo -u openhab cp demo.sitemap /etc/openhab/configurations/sitemaps/default.sitemap
+      sudo systemctl start openhab
+    ;;
+    \"touchscreen\")
+      # https://learn.adafruit.com/adafruit-2-2-pitft-hat-320-240-primary-display-for-raspberry-pi/extras
+      sudo mv /usr/share/X11/xorg.conf.d/99-fbturbo.conf ~
+      sudo echo 'Section "Device"' | sudo tee --append /usr/share/X11/xorg.conf.d/99-pitft.conf
+      sudo echo '  Identifier "Adafruit PiTFT"' | sudo tee --append /usr/share/X11/xorg.conf.d/99-pitft.conf
+      sudo echo '  Driver "fbdev"' | sudo tee --append /usr/share/X11/xorg.conf.d/99-pitft.conf
+      sudo echo '  Option "fbdev" "/dev/fb1"' | sudo tee --append /usr/share/X11/xorg.conf.d/99-pitft.conf
+      sudo echo 'EndSection' | sudo tee --append /usr/share/X11/xorg.conf.d/99-pitft.conf
     ;;
     *)
     ;;
