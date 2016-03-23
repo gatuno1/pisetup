@@ -13,7 +13,10 @@ echo "@conky -c /home/pi/.conkyrc" >> /home/pi/.config/lxsession/LXDE-pi/autosta
 CPU=`cat /proc/cpuinfo | grep Serial | cut -d ':' -f 2 | sed -e "s/ //g"`
 HW=`cat /proc/cpuinfo | grep Hardware | cut -d ':' -f 2 | sed -e "s/ //g"`
 REV=`cat /proc/cpuinfo | grep Revision | cut -d ':' -f 2 | sed -e "s/ //g"`
+echo CPU: $CPU, HW: $HW, REV: $REV
 URL=http://display.news/kiosk/#/${CPU}/${HW}/${REV}
+
+# Pi2
 
 #echo "@chromium-browser --noerrdialogs --kiosk --incognito --disable-restore-session-state http://bgcmen.com/teesheet/#/bracket/view/1" >> /home/pi/.config/lxsession/LXDE-pi/autostart
 #echo "@chromium-browser --noerrdialogs --kiosk --incognito --disable-restore-session-state http://display.news/kiosk/#/$CPU/$HW/$REV" >> /home/pi/.config/lxsession/LXDE-pi/autostart

@@ -17,7 +17,7 @@ then
 fi
 # Optional packages to install
 pkglist=$(whiptail --title "Install Checklist" --checklist \
-"Choose packages to install" 15 60 8 \
+"Choose packages to install" 15 60 10 \
 "xrdp" "XRDP & Conky" ON \
 "emacs" "Emacs" ON \
 "dnsmasq" "DNSMasq" ON \
@@ -26,6 +26,9 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "rpi" "RPi Monitor" ON \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
+"mqtt" "MQTT (Mosca)" ON \
+"apache" "Apache" ON \
+"freeboard" "Freeboard Dashboard" ON \
 "zwave" "ZWave" OFF \
 "openhab" "OpenHAB" OFF \
 "touchscreen" "Touch Screen" OFF \
@@ -51,10 +54,13 @@ sudo ln -s /usr/share/zoneinfo/${timezone} /etc/localtime
 # update package list info
 echo "-- Updating package list"
 sudo apt-get -y update
+echo apt-get update status: $?
 # update and upgrade
 echo "-- Upgrading all packages"
 sudo apt-get -y upgrade
+echo apt-get upgrade status: $?
 sudo apt-get -y dist-upgrade
+echo apt-get dist-upgrade status: $?
 # remove unneeded packages, ideas from https://blog.samat.org/2015/02/05/slimming-an-existing-raspbian-install/
 echo "-- Removing unneeded packages"
 sudo apt-get remove -y wolfram-engine
@@ -123,7 +129,30 @@ do
     ;;
     \"mongodb\")
       echo "-- Installing MongoDB"
-      sudo apt-get -y install mongodb
+      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
+      # Logfile: /var/log/mongodb/mongod.log
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+      echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.2 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+      sudo apt-get update
+      sudo apt-get install -y mongodb-org
+      sudo service mongod start
+      #sudo apt-get -y install mongodb
+    ;;
+    \"mqtt\")
+      echo "-- Installing MQTT Mosca"
+      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
+      sudo npm install -y node-gyp
+      sudo npm install -y -g mosca bunyan
+    ;;
+    \"apache\")
+      echo "-- Installing Apache"
+      sudo apt-get install apache2 php5 libapache2-mod-php5
+      sudo service apache2 restart
+    ;;
+    \"freeboard\")
+      echo "-- Installing Freeboard"
+      git clone https://github.com/Freeboard/freeboard.git
+      sudo ln -s freeboard /var/www/freeboard
     ;;
     \"zwave\")
       echo "-- Installing ZWave"
@@ -134,8 +163,8 @@ do
       make && sudo make install
       export LD_LIBRARY_PATH=/usr/local/lib
       echo 'LD_LIBRARY_PATH=/usr/local/lib' | sudo tee --append /etc/environment
-      npm install node-gyp
-      npm install openzwave-shared
+      npm install -y node-gyp
+      npm install -y openzwave-shared
       wget https://raw.githubusercontent.com/OpenZWave/node-openzwave-shared/master/test2.js
     ;;
     \"openhab\")  # https://github.com/openhab/openhab/wiki/Linux---OS-X
@@ -166,7 +195,7 @@ do
     \"nodered\")
       mkdir .node-red
       cd .node-red
-      npm install node-gyp node-red-node-mongodb request thethingbox-node-timestamp
+      npm install -y node-gyp node-red-node-mongodb request thethingbox-node-timestamp node-red-contrib-deduplicate node-red-contrib-textbelt
       # Startup services
       sudo systemctl enable nodered.service
     ;;
@@ -236,5 +265,5 @@ ELAPSED=$(($ENDTIME - $STARTTIME))
 NICETIME=$(printf '%dh:%dm:%ds\n' $(($ELAPSED/3600)) $(($ELAPSED%3600/60)) $(($ELAPSED%60)))
 # Send a text message
 ip=`ifconfig|xargs|awk '{print $7}'|sed -e 's/[a-z]*:/''/'`
-curl http://textbelt.com/text -d number=${phonenum} -d "message=Setup complete, ${NICETIME}, rebooting, access at IP: ${ip}"
+curl http://textbelt.com/text -d number=${phonenum} -d "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}"
 sudo reboot

@@ -1,0 +1,54 @@
+version.conf
+  static.1.name=distribution
+  static.2.name=kernel_version
+  static.3.name=firmware
+  static.4.name=processor
+  dynamic.1.name=upgrade
+  dynamic.2.name=packages
+  web.status.1.content.1.name=Version
+
+uptime
+  dynamic.1.name=uptime
+  web.status.1.content.2.name=Uptime
+  web.statistics.1.content.7.name=Uptime
+
+cpu
+  dynamic.1.name=cpu_frequency
+  dynamic.2.name=cpu_voltage
+  dynamic.3.name=load1,load5,load15
+  dynamic.4.name=scaling_governor
+  web.status.1.content.1.name=CPU
+  web.statistics.1.content.1.name=CPU Loads
+
+temp
+  dynamic.12.name=soc_temp
+  web.status.1.content.4.name=Temperature
+  web.statistics.1.content.8.name=Temperature
+
+memory
+  static.5.name=memory_total
+  dynamic.9.name=memory_free
+  dynamic.15.name=memory_available
+  web.status.1.content.5.name=Memory
+  web.statistics.1.content.6.name=Memory
+
+swap
+  static.6.name=swap_total
+  dynamic.8.name=swap_used
+  web.status.1.content.6.name=Swap
+  web.statistics.1.content.5.name=Swap
+
+sdcard
+  static.7.name=sdcard_root_total
+  static.8.name=sdcard_boot_total
+  dynamic.6.name=sdcard_root_used
+  dynamic.7.name=sdcard_boot_used
+  web.status.1.content.7.name=SD card
+  web.statistics.1.content.3.name=Disks - boot
+  web.statistics.1.content.4.name=Disks - root
+
+network
+  dynamic.10.name=net_received
+  dynamic.11.name=net_send
+  web.status.1.content.8.name=Network
+  web.statistics.1.content.2.name=Network
