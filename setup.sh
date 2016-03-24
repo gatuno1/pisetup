@@ -2,22 +2,43 @@
 # Whiptail examples - http://xmodulo.com/create-dialog-boxes-interactive-shell-script.html
 oldhostname=$(hostname)
 newhostname=$(whiptail --title "Hostname" --inputbox "Change hostname?" 10 60 $oldhostname 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
 phonenum=$(whiptail --title "Phone Number" --inputbox "Enter phonenumber to text when script is done" 10 60 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
+toemail=$(whiptail --title "gmail" --inputbox "Enter gmail (w/o @gmail.com) address to notify when script is done" 10 60 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
+if [ -n "$toemail" ]
+then
+   emailpass=$(whiptail --title "${toemail} Password" --passwordbox "Enter ${toemail}'s password" 10 60 3>&1 1>&2 2>&3)
+fi
 # pass=$(whiptail --title "Pi Password" --inputbox "Enter the Pi user password" 10 60 raspberry 3>&1 1>&2 2>&3)
 timezone=$(whiptail --title "Timezone" --radiolist \
 "What is your timezone?" 15 60 4 \
 "US/Pacific" "" ON \
 "Europe/Berlin" "" OFF 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
 newuser=$(whiptail --title "Username" --inputbox "Enter new username if you want one" 10 60 3>&1 1>&2 2>&3)
 if [ -n "$newuser" ]
 then
-   newuserpass=$(whiptail --title "${newuser} Password" --inputbox "Enter ${newuser}'s password" 10 60 3>&1 1>&2 2>&3)
+   newuserpass=$(whiptail --title "${newuser} Password" --passwordbox "Enter ${newuser}'s password" 10 60 3>&1 1>&2 2>&3)
    newuserpasscrypt=$(openssl passwd -crypt ${newuserpass})
    sudo useradd -b /home -c ${newuser} -g users -m -p ${newuserpasscrypt} -s /bin/bash ${newuser}
 fi
 # Optional packages to install
 pkglist=$(whiptail --title "Install Checklist" --checklist \
-"Choose packages to install" 15 60 10 \
+"Choose packages to install" 20 60 15 \
 "xrdp" "XRDP & Conky" ON \
 "emacs" "Emacs" ON \
 "dnsmasq" "DNSMasq" ON \
@@ -26,13 +47,19 @@ pkglist=$(whiptail --title "Install Checklist" --checklist \
 "rpi" "RPi Monitor" ON \
 "chrome" "Chromium" ON \
 "mongodb" "MongoDB" ON \
-"mqtt" "MQTT (Mosca)" ON \
 "apache" "Apache" ON \
 "freeboard" "Freeboard Dashboard" ON \
+"node" "Upgrade Node.js to latest" OFF \
+"mosca" "MQTT (Mosca)" OFF \
+"mosquitto" "Mosquitto" OFF \
 "zwave" "ZWave" OFF \
 "openhab" "OpenHAB" OFF \
 "touchscreen" "Touch Screen" OFF \
 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
 # Configuration options
 configopts=$(whiptail --title "Configure Options" --checklist \
 "Do you want these configured" 15 60 8 \
@@ -43,6 +70,10 @@ configopts=$(whiptail --title "Configure Options" --checklist \
 "openhab" "OpenHAB" OFF \
 "touchscreen" "Enable Touch Screen" OFF \
 3>&1 1>&2 2>&3)
+export exitstatus=$?
+if [ $exitstatus != 0 ]; then
+  exit $exitstatus
+fi
 #### start the setup process ####
 STARTTIME=$(date +%s)
 echo "alias ll='ls -l'" >> ~/.bashrc
@@ -52,7 +83,10 @@ sudo rm /etc/localtime
 sudo ln -s /usr/share/zoneinfo/${timezone} /etc/localtime
 # create users
 # update package list info
+echo "-- Listing /etc/apt/sources.list.d because of past issues"
+ls -l /etc/apt/sources.list.d
 echo "-- Updating package list"
+# sudo apt-get -y install apt-transport-https
 sudo apt-get -y update
 echo apt-get update status: $?
 # update and upgrade
@@ -66,17 +100,50 @@ echo "-- Removing unneeded packages"
 sudo apt-get remove -y wolfram-engine
 sudo apt-get remove -y sonic-pi
 ## packages always added
-echo "-- Installing npm, perl libs & nmap"
-sudo apt-get -y install npm
+echo "-- Installing perl libs & nmap"
 # perl libs
 sudo apt-get -y install dpkg-dev librrds-perl libhttp-daemon-perl libjson-perl libipc-sharelite-perl libfile-which-perl
-sudo apt-get -y install  libxml-simple-perl libwww-mechanize-shell-perl libdatetime-event-ical-perl
+sudo apt-get -y install libxml-simple-perl libwww-mechanize-shell-perl libdatetime-event-ical-perl
 # nmap network discovery
 sudo apt-get -y nmap aptitude
 ## package selected from install list
 for pkg in $pkglist
 do
   case $pkg in
+    \"node\")
+      echo "-- Removing old Node.js, Mosca needs newer version
+      sudo apt-get -y remove nodejs-legacy nodejs-dev nodejs
+      sudo apt-get -y remove npm
+      echo "-- Installing latest Node.js for Mosca
+      # these steps got me v4.4.0 in March 2016
+      curl -sL https://deb.nodesource.com/setup_4.x | sudo bash -
+      sudo apt-get install -y build-essential python-dev python-rpi.gpio nodejs
+      # Need 0.10 or 0.12 for Mosca
+      wget
+      tar -xvf node-v4.4.1-linux-armv7l.tar.gz
+      cd node-v4.4.1-linux-armv7l.tar.gz
+      sudo cp -R * /usr/local/
+      # For older Pi's (installed 4.2.1 in March 2016)
+      # wget http://node-arm.herokuapp.com/node_latest_armhf.deb
+      # sudo dpkg -i node_latest_armhf.deb
+      # sudo apt-get install -y build-essential python-dev npm
+    ;;
+    \"mosquitto\")
+      echo "-- Installing Mosquitto"
+      sudo wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+      sudo apt-key add mosquitto-repo.gpg.key
+      cd /etc/apt/sources.list.d/
+      sudo wget http://repo.mosquitto.org/debian/mosquitto-jessie.list
+      sudo apt-get update
+      # sudo apt-get -y install mosquitto
+      sudo apt-get -y install mosquitto mosquitto-clients python-mosquitto
+    ;;
+    \"mosca\")
+      echo "-- Installing MQTT Mosca"
+      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
+      sudo npm install -y node-gyp
+      sudo npm install -y -g mosca bunyan
+    ;;
     \"xrdp\")
       echo "-- Installing XRDP"
       sudo apt-get install -y xrdp
@@ -138,15 +205,9 @@ do
       sudo service mongod start
       #sudo apt-get -y install mongodb
     ;;
-    \"mqtt\")
-      echo "-- Installing MQTT Mosca"
-      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
-      sudo npm install -y node-gyp
-      sudo npm install -y -g mosca bunyan
-    ;;
     \"apache\")
       echo "-- Installing Apache"
-      sudo apt-get install apache2 php5 libapache2-mod-php5
+      sudo apt-get -y install apache2 php5 libapache2-mod-php5
       sudo service apache2 restart
     ;;
     \"freeboard\")
@@ -187,12 +248,15 @@ do
     ;;
   esac
 done
+echo "-- Installing npm"
+sudo apt-get -y install npm
 ## config options
 echo "-- Configuration options"
 for pkg in $configopts
 do
   case $pkg in
     \"nodered\")
+      echo "-- Add nodered packages"
       mkdir .node-red
       cd .node-red
       npm install -y node-gyp node-red-node-mongodb request thethingbox-node-timestamp node-red-contrib-deduplicate node-red-contrib-textbelt
@@ -265,5 +329,13 @@ ELAPSED=$(($ENDTIME - $STARTTIME))
 NICETIME=$(printf '%dh:%dm:%ds\n' $(($ELAPSED/3600)) $(($ELAPSED%3600/60)) $(($ELAPSED%60)))
 # Send a text message
 ip=`ifconfig|xargs|awk '{print $7}'|sed -e 's/[a-z]*:/''/'`
-curl http://textbelt.com/text -d number=${phonenum} -d "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}"
+if [ -n "$phonenum" ]
+then
+  curl http://textbelt.com/text -d number=${phonenum} -d "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}"
+fi
+if [ -n "$toemail" ]
+then
+  sendemail -f ${toemail}@gmail.com -t ${toemail}@gmail.com -u "${newhostname} Pi Setup Complete" -m "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}" -s smtp.gmail.com -o tls=yes -xu ${toemail} -xp ${emailpass}
+fi
+echo "-- I'm done, rebooting"
 sudo reboot
