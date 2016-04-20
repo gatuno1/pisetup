@@ -21,12 +21,13 @@ Here's what the main setup.sh script installs
 
 ### url's
 
+* Apache - http://localhost:80
 * RPi Monitor - http://localhost:8888
 * Node Red - http://localhost:1880
 * ShellInABox - http://localhost:4200
 * OpenHAB - http://localhost:8080/openhab.app?sitemap=yourname (not yet working)
 
-##### ToDo
+#### ToDo
 
 * OpenHAB setup incomplete
 * ZWave install - USB Stick, nodered
@@ -36,12 +37,12 @@ Here's what the main setup.sh script installs
 * Calculate disk space used
 * If user chooses Cancel on any prompt, abort setup script
 
-##### Fixed bugs
+#### Fixed bugs
 
 * Error - Unable to resolve host raspberrypi
 * can't overwrite /etc/localtime, delete first
 
-#### Dependencies
+### Dependencies
 
 These files must be in the setup.sh home directory to function correctly:
 
@@ -49,7 +50,7 @@ These files must be in the setup.sh home directory to function correctly:
 * 80autostart
 * .conkyrc
 
-#### Notes
+### Notes
 
 * Choose apps to start on boot: RPi Monitor, Node Red, MongoDB
   * Node Red

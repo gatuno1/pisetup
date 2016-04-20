@@ -39,17 +39,17 @@ fi
 # Optional packages to install
 pkglist=$(whiptail --title "Install Checklist" --checklist \
 "Choose packages to install" 20 60 15 \
-"xrdp" "XRDP & Conky" ON \
+"xrdp" "XRDP & Conky" OFF \
 "emacs" "Emacs" ON \
-"dnsmasq" "DNSMasq" ON \
+"dnsmasq" "DNSMasq" OFF \
 "sendmail" "Sendmail & Mailutils" ON \
 "shellinabox" "Shell In A Box" ON \
 "rpi" "RPi Monitor" ON \
-"chrome" "Chromium" ON \
+"chrome" "Chromium" OFF \
+"node" "Upgrade Node.js to 0.12.x" ON \
 "mongodb" "MongoDB" ON \
 "apache" "Apache" ON \
 "freeboard" "Freeboard Dashboard" ON \
-"node" "Upgrade Node.js to latest" OFF \
 "mosca" "MQTT (Mosca)" OFF \
 "mosquitto" "Mosquitto" OFF \
 "zwave" "ZWave" OFF \
@@ -65,8 +65,9 @@ configopts=$(whiptail --title "Configure Options" --checklist \
 "Do you want these configured" 15 60 8 \
 "nodered" "Node Red nodes" ON \
 "wpa" "WiFi credentials file" ON \
-"autostart" "X11 autostart file" ON \
+"autostart" "X11 autostart file" OFF \
 "rpi" "RPi Monitor" ON \
+"mosca" "Mosca" OFF \
 "openhab" "OpenHAB" OFF \
 "touchscreen" "Enable Touch Screen" OFF \
 3>&1 1>&2 2>&3)
@@ -74,9 +75,21 @@ export exitstatus=$?
 if [ $exitstatus != 0 ]; then
   exit $exitstatus
 fi
+#for pkg in $pkglist
+#do
+#  case $pkg in
+#    \"mosca\")
+#      mqttuser=$(whiptail --title "MQTT User" --inputbox "Enter new Mosca MQTT user" 10 60 3>&1 1>&2 2>&3)
+#      if [ -n "$mqttuser" ]
+#      then
+#         mqttpass=$(whiptail --title "${mqttuser} Password" --passwordbox "Enter ${mqttuser}'s password" 10 60 3>&1 1>&2 2>&3)
+#      fi
+#      ;;
+#  esac
+#done
 #### start the setup process ####
 STARTTIME=$(date +%s)
-echo "alias ll='ls -l'" >> ~/.bashrc
+sudo echo "alias ll='ls -l'" >> ~/.bashrc
 # Update timezone
 sudo rm /etc/localtime
 #sudo ln -s /usr/share/zoneinfo/US/Pacific /etc/localtime
@@ -111,38 +124,30 @@ for pkg in $pkglist
 do
   case $pkg in
     \"node\")
-      echo "-- Removing old Node.js, Mosca needs newer version
+      echo "-- Removing old Node.js, Mosca needs newer version"
       sudo apt-get -y remove nodejs-legacy nodejs-dev nodejs
-      sudo apt-get -y remove npm
-      echo "-- Installing latest Node.js for Mosca
+      #sudo apt-get -y remove npm
+      echo "-- Installing latest Node.js for Mosca"
       # these steps got me v4.4.0 in March 2016
-      curl -sL https://deb.nodesource.com/setup_4.x | sudo bash -
-      sudo apt-get install -y build-essential python-dev python-rpi.gpio nodejs
-      # Need 0.10 or 0.12 for Mosca
-      wget
-      tar -xvf node-v4.4.1-linux-armv7l.tar.gz
-      cd node-v4.4.1-linux-armv7l.tar.gz
-      sudo cp -R * /usr/local/
+      #curl -sL https://deb.nodesource.com/setup_4.x | sudo bash -
+      #sudo apt-get install -y build-essential python-dev python-rpi.gpio nodejs
+      # Need 0.12 for Mosca - this does 0.12.6
+      wget http://node-arm.herokuapp.com/node_archive_armhf.deb
+      sudo dpkg -i node_archive_armhf.deb
+      sudo ln -s /usr/local/bin/node /usr/bin/node
+      sudo apt-get install -y npm
+      # Install startup files
+      sudo wget https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/nodered.service -O /lib/systemd/system/nodered.service
+      sudo wget https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-start -O /usr/bin/node-red-start
+      sudo wget https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-stop -O /usr/bin/node-red-stop
+      sudo chmod +x /usr/bin/node-red-st*
+      sudo systemctl daemon-reload
+      sudo systemctl start nodered
+      sudo systemctl enable nodered.service
       # For older Pi's (installed 4.2.1 in March 2016)
       # wget http://node-arm.herokuapp.com/node_latest_armhf.deb
       # sudo dpkg -i node_latest_armhf.deb
       # sudo apt-get install -y build-essential python-dev npm
-    ;;
-    \"mosquitto\")
-      echo "-- Installing Mosquitto"
-      sudo wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
-      sudo apt-key add mosquitto-repo.gpg.key
-      cd /etc/apt/sources.list.d/
-      sudo wget http://repo.mosquitto.org/debian/mosquitto-jessie.list
-      sudo apt-get update
-      # sudo apt-get -y install mosquitto
-      sudo apt-get -y install mosquitto mosquitto-clients python-mosquitto
-    ;;
-    \"mosca\")
-      echo "-- Installing MQTT Mosca"
-      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
-      sudo npm install -y node-gyp
-      sudo npm install -y -g mosca bunyan
     ;;
     \"xrdp\")
       echo "-- Installing XRDP"
@@ -180,6 +185,8 @@ do
       sudo apt-get -y install aptitude
       sudo apt-get upgrade
       sudo /usr/share/rpimonitor/scripts/updatePackagesStatus.pl
+      # Remove the RPi Monitor list because it causes cache problems updating other packages
+      sudo rm /etc/apt/sources.list.d/rpimonitor.list
       # RPi Monitor
       #wget https://github.com/XavierBerger/RPi-Monitor-deb/raw/master/packages/rpimonitor_2.10.1-1_all.deb
       #wget https://github.com/XavierBerger/RPi-Monitor-deb/blob/master/packages/rpimonitor_2.10-1_all.deb
@@ -199,11 +206,12 @@ do
       # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
       # Logfile: /var/log/mongodb/mongod.log
       sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
-      echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.2 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
-      sudo apt-get update
-      sudo apt-get install -y mongodb-org
-      sudo service mongod start
-      #sudo apt-get -y install mongodb
+      #echo "deb http://repo.mongodb.org/apt/debian wheezy/mongodb-org/3.2 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+      #sudo apt-get update
+      #sudo apt-get install -y mongodb-org
+      #sudo service mongod start
+      sudo apt-get -y install mongodb
+      # sudo systemctl status mongodb.service
     ;;
     \"apache\")
       echo "-- Installing Apache"
@@ -214,6 +222,36 @@ do
       echo "-- Installing Freeboard"
       git clone https://github.com/Freeboard/freeboard.git
       sudo ln -s freeboard /var/www/freeboard
+      # /etc/apache2/sites-available/000-default.conf
+      # <VirtualHost *:81>
+      #   DocumentRoot /var/www/freeboard
+      # </VirtualHost>
+    ;;
+    \"mosca\")
+      echo "-- Installing MQTT Mosca"
+      # Mongo test commands: https://docs.mongodb.org/manual/reference/mongo-shell/
+      # sudo npm install -y node-gyp
+      sudo apt-get install -y libkrb5-dev
+      sudo apt-get install -y libzmq3 libzmq3-dev python
+      # local install
+      # npm install mosca bunyan -y --unsafe-perm
+      # global install
+      sudo npm install mosca bunyan -y -g --unsafe-perm
+      # global install locatin: /usr/local/bin/mosca
+      # local install location: node_modules/mosca/bin/mosca
+      # sudo npm install -y -g node-gyp
+      # sudo npm install -y -g mosca bunyan
+    ;;
+    \"mosquitto\")
+      echo "-- Installing Mosquitto"
+      sudo wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+      sudo apt-key add mosquitto-repo.gpg.key
+      cd /etc/apt/sources.list.d/
+      sudo wget http://repo.mosquitto.org/debian/mosquitto-jessie.list
+      sudo apt-get update
+      # sudo apt-get -y install mosquitto
+      sudo apt-get -y install mosquitto mosquitto-clients python-mosquitto
+      sudo git https://gist.github.com/basuke/7777918 /etc/init.d.mosquitto
     ;;
     \"zwave\")
       echo "-- Installing ZWave"
@@ -278,6 +316,16 @@ do
       sudo sed -i "s/$nbtop=3/$nbtop=10/" /usr/share/rpimonitor/web/addons/top3/top3
       sudo service rpimonitor restart
     ;;
+    \"mosca\")
+      echo "-- Configure Mosca"
+      chmod +x mosca.sh
+      mosca addu^Cr spadafy spadafy --credentials ./moscacreds.json
+      sudo cp mosca.sh /etc/init.d/mosca
+      sudo chown root:root /etc/init.d/mosca
+      sudo update-rc.d mosca defaults
+      sudo service mosca start
+      # Log: /var/log/mosca.log
+    ;;
     \"openhab\")
       sudo systemctl daemon-reload
       sudo systemctl enable openhab
@@ -303,6 +351,14 @@ do
       wget https://raw.githubusercontent.com/openhab/openhab-distro/master/features/openhab-demo-resources/src/main/resources/sitemaps/demo.sitemap
       sudo -u openhab cp demo.sitemap /etc/openhab/configurations/sitemaps/default.sitemap
       sudo systemctl start openhab
+    ;;
+    \"osticket\")
+      # https://github.com/osTicket/osTicket
+      # http://localhost/osticket
+      sudo apt-get install -y mysql-server python-mysqldb php5-mysql php5-imap php5-apcu php5-gd
+      git clone https://github.com/osTicket/osTicket-1.8
+      cd osTicket-1.8
+      sudo php manage.php deploy --setup /var/www/html/osticket/
     ;;
     \"touchscreen\")
       # https://learn.adafruit.com/adafruit-2-2-pitft-hat-320-240-primary-display-for-raspberry-pi/extras
@@ -335,7 +391,7 @@ then
 fi
 if [ -n "$toemail" ]
 then
-  sendemail -f ${toemail}@gmail.com -t ${toemail}@gmail.com -u "${newhostname} Pi Setup Complete" -m "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}" -s smtp.gmail.com -o tls=yes -xu ${toemail} -xp ${emailpass}
+  sendemail -f ${toemail}@gmail.com -t ${toemail}@gmail.com -u "${newhostname} Pi Setup Complete" -m "message=Setup complete, ${NICETIME}, rebooting ${newhostname}, access at IP: ${ip}" -s smtp.gmail.com:587 -o tls=yes -xu ${toemail} -xp ${emailpass}
 fi
 echo "-- I'm done, rebooting"
 sudo reboot
