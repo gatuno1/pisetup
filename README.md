@@ -29,6 +29,7 @@ Here's what the main setup.sh script installs
 
 #### ToDo
 
+* Allow install of Node without NodeRed
 * OpenHAB setup incomplete
 * ZWave install - USB Stick, nodered
 * Option to install Touch screen
