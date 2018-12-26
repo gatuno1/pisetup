@@ -4,7 +4,13 @@ HW=`cat /proc/cpuinfo | grep Hardware | cut -d ':' -f 2 | sed -e "s/ //g"`
 REV=`cat /proc/cpuinfo | grep Revision | cut -d ':' -f 2 | sed -e "s/ //g"`
 #values from http://elinux.org/RPi_HardwareHistory
 case ${REV} in
-  a02082|a22082)
+  a020d3)
+    echo 'Pi 3 Model B+, 1024MB RAM'
+    ;;
+  9020e0)
+    echo 'Pi 3 Model A+, 512MB RAM'
+    ;;
+  a02082|a22082|a32082)
     echo 'Pi 3 Model B, 1024MB RAM'
     ;;
   a01040|a01041|a21041|a22042)
@@ -12,6 +18,9 @@ case ${REV} in
     ;;
   900092|900093)
     echo 'Pi Zero, 512MB RAM'
+    ;;
+  9000c1)
+    echo 'Pi Zero W, 512MB RAM'
     ;;
   0015)
     echo 'Pi Model A+, 512MB RAM'
@@ -23,8 +32,11 @@ case ${REV} in
     echo 'Pi, Model B+, 512MB RAM'
     ;;
   0011|0014)
-    echo 'Compute Module, 512MB RAM'
+    echo 'Compute Module 1, 512MB RAM'
     ;;
+  a020a0)
+	echo 'Compute Module 3, 1024MB RAM'
+	;;
   0002|0004|0005|0006)
     echo 'Pi Model B, 256MB RAM'
     ;;
@@ -44,3 +56,4 @@ case ${REV} in
     echo '${REV} (unknown)'
     ;;
 esac
+
